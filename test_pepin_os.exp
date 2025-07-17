@@ -1,0 +1,194 @@
+#!/usr/bin/expect -f
+
+# Set timeout for commands
+set timeout 30
+
+# Start QEMU with the kernel
+spawn qemu-system-i386 -kernel /app/kernel -nographic -monitor none
+
+# Wait for the system to boot and show the shell prompt
+expect {
+    "pepin$ " {
+        puts "✅ System booted successfully and shell prompt appeared"
+    }
+    timeout {
+        puts "❌ System failed to boot or shell prompt not found"
+        exit 1
+    }
+}
+
+# Test help command
+send "help\r"
+expect {
+    "Available commands:" {
+        puts "✅ Help command works"
+    }
+    timeout {
+        puts "❌ Help command failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test ls command
+send "ls\r"
+expect {
+    -re "(readme\.txt|Files in root directory)" {
+        puts "✅ ls command works"
+    }
+    timeout {
+        puts "❌ ls command failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test echo command
+send "echo test message\r"
+expect {
+    "test message" {
+        puts "✅ echo command works"
+    }
+    timeout {
+        puts "❌ echo command failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test cat command (try to read readme.txt)
+send "cat readme.txt\r"
+expect {
+    -re "(Welcome|This is|readme)" {
+        puts "✅ cat command works"
+    }
+    "Cannot open file" {
+        puts "⚠️  cat command works but readme.txt not found"
+    }
+    timeout {
+        puts "❌ cat command failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test create command
+send "create testfile.txt 50\r"
+expect {
+    "File created: testfile.txt" {
+        puts "✅ create command works"
+    }
+    timeout {
+        puts "❌ create command failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test write command
+send "write testfile.txt \"hello world\"\r"
+expect {
+    "Text written to testfile.txt" {
+        puts "✅ write command works"
+    }
+    timeout {
+        puts "❌ write command failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test reading the file we just created
+send "cat testfile.txt\r"
+expect {
+    "hello world" {
+        puts "✅ File operations work correctly"
+    }
+    timeout {
+        puts "❌ File read after write failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test exec command with hello.elf
+send "exec hello.elf\r"
+expect {
+    "Hello from user program!" {
+        puts "✅ ELF execution works"
+    }
+    timeout {
+        puts "❌ ELF execution failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test ps command
+send "ps\r"
+expect {
+    "Process information:" {
+        puts "✅ ps command works"
+    }
+    timeout {
+        puts "❌ ps command failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test mem command
+send "mem\r"
+expect {
+    "Memory information:" {
+        puts "✅ mem command works"
+    }
+    timeout {
+        puts "❌ mem command failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+# Test clear command
+send "clear\r"
+expect {
+    "pepin$ " {
+        puts "✅ clear command works"
+    }
+    timeout {
+        puts "❌ clear command failed"
+        exit 1
+    }
+}
+
+# Test tasks command (optional multitasking demo)
+send "tasks\r"
+expect {
+    -re "(Background tasks|already running)" {
+        puts "✅ tasks command works"
+    }
+    timeout {
+        puts "❌ tasks command failed"
+        exit 1
+    }
+}
+
+expect "pepin$ "
+
+puts "\n🎉 All tests completed successfully!"
+puts "Pepin OS is working as expected"
+
+# Exit QEMU
+send "\x01x"
+expect eof

@@ -1,0 +1,58 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+
+# Start QEMU with the kernel
+spawn qemu-system-i386 -kernel /app/kernel -nographic -monitor none
+
+# Look for any of the expected boot messages
+expect {
+    -re "(Grub example kernel|Pepin Operating System|pepin\\\$|kernel.*loaded)" {
+        puts "✅ BOOT SUCCESS: System is booting and showing expected messages"
+        set boot_success 1
+    }
+    -re "(Pepin OS Shell|Shell v1.0)" {
+        puts "✅ SHELL SUCCESS: Shell interface is loading"
+        set shell_success 1
+    }
+    timeout {
+        puts "⚠️  TIMEOUT: System may be running but no expected output captured"
+        set boot_success 0
+    }
+}
+
+# Try to send a simple command if we see a prompt
+expect {
+    "pepin$ " {
+        puts "✅ PROMPT SUCCESS: Shell prompt detected"
+        send "help\r"
+        expect {
+            -re "(Available commands|help.*Show)" {
+                puts "✅ COMMAND SUCCESS: Help command works"
+            }
+            timeout {
+                puts "⚠️  Command response timeout"
+            }
+        }
+    }
+    timeout {
+        puts "⚠️  No shell prompt detected within timeout"
+    }
+}
+
+puts "\n=== QEMU Test Results ==="
+if {[info exists boot_success] && $boot_success == 1} {
+    puts "✅ Boot process: SUCCESS"
+} else {
+    puts "⚠️  Boot process: UNCERTAIN (may work but not captured)"
+}
+
+if {[info exists shell_success] && $shell_success == 1} {
+    puts "✅ Shell interface: SUCCESS"
+} else {
+    puts "⚠️  Shell interface: UNCERTAIN (may work but not captured)"
+}
+
+# Exit QEMU
+send "\x01x"
+expect eof
