@@ -623,7 +623,9 @@ execute_command() {
                 show_message $RED "Uso: write <archivo> <contenido>"
                 return 1
             fi
-            write_file "${args[0]}" "${args[1]}" ;;
+            # Concatenar todos los argumentos después del filename
+            local content="${args[*]:1}"
+            write_file "${args[0]}" "$content" ;;
         
         "read"|"cat")
             if [[ ${#args[@]} -lt 1 ]]; then
