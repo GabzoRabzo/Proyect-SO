@@ -135,6 +135,9 @@ write_file() {
         return 1
     fi
     
+    # Remover comillas si las hay
+    content=$(echo "$content" | sed 's/^"//; s/"$//')
+    
     files["$filename"]="$content"
     file_sizes["$filename"]=${#content}
     
