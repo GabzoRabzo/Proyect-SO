@@ -154,7 +154,7 @@ read_file() {
         return 1
     fi
     
-    printf "%s\n" "${files[$filename]}"
+    printf "%b\n" "${files[$filename]}"
     return 0
 }
 
