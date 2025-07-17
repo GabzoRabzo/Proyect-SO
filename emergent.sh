@@ -151,7 +151,7 @@ read_file() {
         return 1
     fi
     
-    echo "${files[$filename]}"
+    printf "%s\n" "${files[$filename]}"
     return 0
 }
 
